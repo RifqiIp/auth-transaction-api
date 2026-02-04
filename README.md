@@ -12,6 +12,6 @@ Built as a learning project focusing on clean architecture and raw SQL.
 
 ## Features (In Progress)
 - [x] User registration (hashed password)
-- [ ] User login (JWT)
+- [x] User login (JWT authentication)
 - [ ] Auth middleware
 - [ ] Transaction & order system
