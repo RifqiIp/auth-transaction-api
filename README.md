@@ -1,18 +1,11 @@
 # Auth & Transaction API
 
-A simple backend REST API built with Node.js and Express that implements
-JWT-based authentication and basic transaction logic.
-
-This project focuses on backend fundamentals such as:
-- Authentication & authorization
-- Layered architecture (Repository, Service, Controller)
-- PostgreSQL with raw SQL
-- Middleware-based security
+Backend REST API menggunakan Node.js dan Express dengan fitur Authentication, Authorization (USER & ADMIN),
+serta Transaction management. Project ini dibuat dengan fokus pada clean architecture dan best practice backend.
 
 ---
 
 ## Tech Stack
-
 - Node.js
 - Express.js
 - PostgreSQL
@@ -23,48 +16,90 @@ This project focuses on backend fundamentals such as:
 ---
 
 ## Project Structure
-
 ```
 src/
-├── controllers/     # Handle HTTP requests & responses
-├── services/        # Business logic
-├── repositories/    # Database queries (raw SQL)
-├── routes/          # API routes
-├── middlewares/     # Auth middleware (JWT)
-├── config/          # Database configuration
+├── controllers/
+├── services/
+├── repositories/
+├── routes/
+├── middlewares/
+│   ├── authMiddleware.js
+│   └── authorizeRole.js
+├── config/
 ├── app.js
 └── server.js
 ```
 
 ---
 
-## Authentication Flow
+## Database Schema (PostgreSQL)
 
-1. User registers with email and password
-2. Password is hashed using bcrypt
-3. User logs in and receives a JWT token
-4. Token is sent via Authorization header
-5. Protected routes use auth middleware to verify token
+### Enum
+```sql
+CREATE TYPE user_role AS ENUM ('USER', 'ADMIN');
+CREATE TYPE order_status AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
+```
+
+### Users Table
+```sql
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  email VARCHAR(100) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role user_role NOT NULL DEFAULT 'USER',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### Orders Table
+```sql
+CREATE TABLE orders (
+  id SERIAL PRIMARY KEY,
+  user_id UUID NOT NULL REFERENCES users(id),
+  amount NUMERIC NOT NULL,
+  status order_status NOT NULL DEFAULT 'PENDING',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## Authentication Flow
+1. Register user (password di-hash)
+2. Login → JWT token
+3. Token dikirim via Authorization header
+4. Middleware validasi JWT
+5. Role-based access (ADMIN / USER)
+
+---
+
+## Middleware
+
+### Auth Middleware
+- Validasi JWT
+- Inject user ke `req.user`
+
+### Admin Middleware
+- Pastikan `req.user.role === 'ADMIN'`
+- Digunakan untuk endpoint terbatas
 
 ---
 
 ## API Endpoints
 
 ### Auth
-- POST /auth/register
-- POST /auth/login
-- GET  /auth/me (protected)
+- POST `/auth/register`
+- POST `/auth/login`
+- GET `/auth/me` (protected)
 
-### Orders (protected)
-- POST /orders
-- GET  /orders
+### Orders 
+- POST `/orders` (USER)
+- GET `/orders` (USER)
+- GET `/orders/all` (ADMIN)
 
 ---
 
-## Authorization
-
-Protected endpoints require a valid JWT token sent in the request header:
-
+## Authorization Header
 ```
 Authorization: Bearer <token>
 ```
@@ -72,10 +107,7 @@ Authorization: Bearer <token>
 ---
 
 ## Environment Variables
-
-Create a `.env` file in the root directory:
-
-```
+```env
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=postgres
@@ -87,23 +119,39 @@ JWT_SECRET=your_secret_key
 ---
 
 ## How to Run
-
-1. Install dependencies
-```
+```bash
 npm install
-```
-
-2. Run database schema manually (SQL)
-
-3. Start the server
-```
 npm run dev
 ```
 
 ---
 
 ## Project Goal
+Project ini dibuat untuk menunjukkan pemahaman backend fundamental:
+- Auth & Authorization
+- Database enum & relational design
+- Clean architecture
+- Middleware security
 
-This project was built as a learning project to strengthen backend
-fundamentals, especially authentication, authorization, and transaction
-handling using raw SQL.
+---
+
+## Project Status
+
+✅ Authentication & Authorization (Completed)
+- Register & Login
+- JWT-based authentication
+- Role-based authorization (USER & ADMIN)
+
+🕒 Transaction / Orders Module (Planned)
+- Create order
+- Get user orders
+- Get all orders (ADMIN only)
+- Order status management (PENDING / SUCCESS / FAILED)
+
+> Orders module akan ditambahkan pada update berikutnya sebagai pengembangan lanjutan.
+
+---
+
+## 👤 Author
+
+Rifqi Pratama
